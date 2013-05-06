@@ -34,7 +34,8 @@
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
             elementFormDefault="unqualified">
 
-  <!-- <deployment> -->
+  
+    <!-- <deployment> -->
   <xs:element name="deployment" type="deploymentType"/>
   <xs:complexType name="deploymentType">
     <xs:all>
@@ -52,6 +53,7 @@
       <xs:element name="systemsettings" minOccurs="0" maxOccurs="1"
                   type="systemSettingsType" />
       <xs:element name="security" minOccurs='0' maxOccurs='1' type="securityType"/>
+      <xs:element name="cold-storage" minOccurs='0' maxOccurs='1' type="coldStorageType"/>
     </xs:all>
   </xs:complexType>
 
@@ -149,6 +151,11 @@
   <!-- <heartbeat-config> -->
   <xs:complexType name="heartbeatType">
     <xs:attribute name="timeout" type="timeoutType" use="required"/>
+  </xs:complexType>
+  
+  <!-- <cold-storage> -->
+  <xs:complexType name="coldStorageType">
+      <xs:attribute name="enabled" type="xs:int" use="required"/>
   </xs:complexType>
 
   <xs:simpleType name="timeoutType">
