@@ -712,11 +712,11 @@ public class RealVoltDB implements VoltDBInterface, RestoreAgent.Callback
             org.voltdb.compiler.deploymentfile.ColdStorageType coldStorageInfo = m_deployment.getColdStorage();
             if (coldStorageInfo != null && m_deployment.getColdStorage().getEnabled() > 0)
             {
-                consoleLog.info("Cold storage is turn on.");
+                consoleLog.info("Cold storage is enabled.");
             }
             else
             {
-                consoleLog.info("Cold storage is turn off.");
+                consoleLog.info("Cold storage is disabled.");
             }            
             
             if (clusterConfig.getReplicationFactor() == 0) {
