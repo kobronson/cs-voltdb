@@ -248,6 +248,12 @@ public class RealVoltDB implements VoltDBInterface, RestoreAgent.Callback
     volatile String m_localMetadata = "";
 
     private ListeningExecutorService m_computationService;
+    
+    private static boolean coldStorageIsEnabled;
+    
+    private static float percentageOfDataToMove;
+    
+    private static float limitMemoryUsagePercentage;
 
     // methods accessed via the singleton
     @Override
@@ -710,13 +716,17 @@ public class RealVoltDB implements VoltDBInterface, RestoreAgent.Callback
             logDebuggingInfo(m_config.m_adminPort, m_config.m_httpPort, m_httpPortExtraLogMessage, m_jsonEnabled);
             
             org.voltdb.compiler.deploymentfile.ColdStorageType coldStorageInfo = m_deployment.getColdStorage();
-            if (coldStorageInfo != null && m_deployment.getColdStorage().getEnabled() > 0)
+            if (coldStorageInfo != null && coldStorageInfo.getEnabled() > 0)
             {
-                consoleLog.info("Cold storage is enabled.");
+                percentageOfDataToMove = coldStorageInfo.getDatapercentage();
+                limitMemoryUsagePercentage = coldStorageInfo.getMemoryusagepercentage();
+                consoleLog.info("Cold storage is enabled. " + percentageOfDataToMove + "% of the least recently used data will be moved on disk when the memory usage reaches " + limitMemoryUsagePercentage + "%.");
+                coldStorageIsEnabled = true;
             }
             else
             {
                 consoleLog.info("Cold storage is disabled.");
+                coldStorageIsEnabled = false;
             }            
             
             if (clusterConfig.getReplicationFactor() == 0) {

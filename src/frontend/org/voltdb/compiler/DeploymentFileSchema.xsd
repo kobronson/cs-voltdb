@@ -156,6 +156,8 @@
   <!-- <cold-storage> -->
   <xs:complexType name="coldStorageType">
       <xs:attribute name="enabled" type="xs:int" use="required"/>
+      <xs:attribute name="datapercentage" type="xs:float" default="30" />
+      <xs:attribute name="memoryusagepercentage" type="xs:float" default="80" />
   </xs:complexType>
 
   <xs:simpleType name="timeoutType">
