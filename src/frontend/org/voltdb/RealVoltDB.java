@@ -722,13 +722,15 @@ public class RealVoltDB implements VoltDBInterface, RestoreAgent.Callback
                 limitMemoryUsagePercentage = coldStorageInfo.getMemoryusagepercentage();
                 consoleLog.info("Cold storage is enabled. " + percentageOfDataToMove + "% of the least recently used data will be moved on disk when the memory usage reaches " + limitMemoryUsagePercentage + "%.");
                 coldStorageIsEnabled = true;
+                Memory.SetPercentageOfDataToMove(percentageOfDataToMove);
+                Memory.SetLimitUsagePercentage(limitMemoryUsagePercentage);
             }
             else
             {
                 consoleLog.info("Cold storage is disabled.");
                 coldStorageIsEnabled = false;
             }            
-            
+            Memory.SetColdStorageEnabled(coldStorageIsEnabled);
             if (clusterConfig.getReplicationFactor() == 0) {
                 hostLog.warn("Running without redundancy (k=0) is not recommended for production use.");
             }
