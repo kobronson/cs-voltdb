@@ -7,7 +7,7 @@
 
 void CsXML::load(const std::string &filename)
 {
-    // Create an empty property tree object
+    //                  Create an empty property tree object
     using boost::property_tree::ptree;
     ptree pt;
 
