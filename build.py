@@ -304,6 +304,7 @@ CTX.INPUT['storage'] = """
  TupleStreamWrapper.cpp
  RecoveryContext.cpp
  TupleBlock.cpp
+ ColdStorageXML.cpp
 """
 
 CTX.INPUT['stats'] = """
