@@ -5,7 +5,7 @@ package org.voltdb;
  *
  * @author Kamil Szmit
  */
-public class Memory
+public abstract class Memory
 {
     private static float limitUsagePercentage;
     private static float percentageOfDataToMove;
@@ -15,7 +15,7 @@ public class Memory
      *
      * @return the number of percentages of used RAM
      */
-    public static double GetUsage()
+    public static double getUsage()
     {
         Runtime runtime = Runtime.getRuntime();
         double total = runtime.totalMemory();
@@ -26,16 +26,16 @@ public class Memory
      *
      * @return true if the memory used is equal to or greater than the limit
      */
-    public static boolean ShouldBeMoveOnDisk()
+    public static boolean shouldBeMoveOnDisk()
     {
-        return (limitUsagePercentage <= GetUsage());
+        return (limitUsagePercentage <= getUsage());
     }
     /**
      * Sets the limit percentage of used RAM
      *
      * @param limit the number of percentages
      */
-    public static void SetLimitUsagePercentage(final float limit)
+    public static void setLimitUsagePercentage(final float limit)
     {
         limitUsagePercentage = limit;
     }
@@ -44,7 +44,7 @@ public class Memory
      *
      * @return the number of percentages of data
      */
-    public static float GetPercentageOfDataToMove()
+    public static float getPercentageOfDataToMove()
     {
         return percentageOfDataToMove;
     }
@@ -53,7 +53,7 @@ public class Memory
      *
      * @param percentage the number of percentages of data
      */
-    public static void SetPercentageOfDataToMove(final float percentage)
+    public static void setPercentageOfDataToMove(final float percentage)
     {
         percentageOfDataToMove = percentage;
     }
@@ -62,7 +62,7 @@ public class Memory
      *
      * @return true if cold storage is enabled
      */
-    public static boolean ColdStorageIsEnabled()
+    public static boolean coldStorageIsEnabled()
     {
         return coldStorageIsEnabled;
     }
@@ -71,7 +71,7 @@ public class Memory
      *
      * @param isEnabled true if cold storage is enabled
      */
-    public static void SetColdStorageEnabled(final boolean isEnabled)
+    public static void setColdStorageEnabled(final boolean isEnabled)
     {
         coldStorageIsEnabled = isEnabled;
     }
