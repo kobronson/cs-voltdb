@@ -1,5 +1,5 @@
 package org.voltdb;
-
+import com.sun.management.OperatingSystemMXBean;
 /**
  * Information of used memory
  *
@@ -7,9 +7,9 @@ package org.voltdb;
  */
 public abstract class Memory
 {
-    private static float limitUsagePercentage;
-    private static float percentageOfDataToMove;
-    private static boolean coldStorageIsEnabled;
+    private static float limitUsagePercentage = 100;
+    private static float percentageOfDataToMove = 0;
+    private static boolean coldStorageIsEnabled = false;
     /**
      * Gets the percentage of used random access memory
      *
@@ -17,9 +17,9 @@ public abstract class Memory
      */
     public static double getUsage()
     {
-        Runtime runtime = Runtime.getRuntime();
-        double total = runtime.totalMemory();
-        return 100 * (total - runtime.freeMemory()) / total;
+        OperatingSystemMXBean os = (OperatingSystemMXBean) java.lang.management.ManagementFactory.getOperatingSystemMXBean();
+        double total = os.getTotalPhysicalMemorySize();
+        return 100 * (total - (double) os.getFreePhysicalMemorySize()) / total;
     }
     /**
      * Checks if the used memory reached the limit
@@ -28,6 +28,7 @@ public abstract class Memory
      */
     public static boolean shouldBeMoveOnDisk()
     {
+        
         return (limitUsagePercentage <= getUsage());
     }
     /**
