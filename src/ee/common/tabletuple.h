@@ -61,7 +61,7 @@ class CopyOnWriteTest_TestTableTupleFlags;
 
 namespace voltdb {
 
-#define TUPLE_HEADER_SIZE 1
+#define TUPLE_HEADER_SIZE 100
 
 #define ACTIVE_MASK 1
 #define DIRTY_MASK 2
@@ -82,6 +82,20 @@ class TableTuple {
 public:
     /** Initialize a tuple unassociated with a table (bad idea... dangerous) */
     explicit TableTuple();
+    
+    
+    // ###
+    int m_CSI; // mamy miejsce bo zmielismy TUPLE_HEADER_SIZE 1->100.
+    void setCSI(int newCSI);
+    int getCSI(); 
+	bool isTuple; // na wypadek jesli tuple to index key 
+	bool checkIfTuple() {
+		return isTuple;
+	}
+	void incrementCSI();
+
+
+
 
     /** Setup the tuple given a table */
     TableTuple(const TableTuple &rhs);
@@ -106,6 +120,7 @@ public:
 
     inline void moveNoHeader(void *address) {
         assert(m_schema);
+        isTuple = false; // ###
         // isActive() and all the other methods expect a header
         m_data = reinterpret_cast<char*> (address) - TUPLE_HEADER_SIZE;
     }
@@ -115,6 +130,7 @@ public:
     inline void moveToReadOnlyTuple(const void *address) {
         assert(m_schema);
         assert(address);
+        isTuple = false; // ###
         //Necessary to move the pointer back TUPLE_HEADER_SIZE
         // artificially because Tuples used as keys for indexes do not
         // have the header.
@@ -270,11 +286,11 @@ public:
     }
 
     inline const voltdb::TupleSchema* getSchema() const {
-        return m_schema;
+    	return m_schema;
     }
 
     /** Print out a human readable description of this tuple */
-    std::string debug(const std::string& tableName) const;
+    std::string debug(const std::string& tableName); // ### bylo )const
     std::string debugNoHeader() const;
 
     /** Copy values from one tuple into another (uses memcpy) */
@@ -339,6 +355,10 @@ protected:
         // treat the first "value" as a boolean flag
         *(reinterpret_cast<char*> (m_data)) &= static_cast<char>(~DIRTY_MASK);
     }
+	
+	
+	
+
 
     /** The types of the columns in the tuple */
     const TupleSchema *m_schema;
@@ -384,15 +404,20 @@ private:
 
 inline TableTuple::TableTuple() :
     m_schema(NULL), m_data(NULL) {
+    // ### 
+    m_CSI = 0;
+    isTuple = true;
 }
 
 inline TableTuple::TableTuple(const TableTuple &rhs) :
     m_schema(rhs.m_schema), m_data(rhs.m_data) {
+    isTuple = true; // ###
 }
 
 inline TableTuple::TableTuple(const TupleSchema *schema) :
     m_schema(schema), m_data(NULL) {
     assert (m_schema);
+    isTuple = true; // ###
 }
 
 /** Setup the tuple given the specified data location and schema **/
@@ -401,6 +426,7 @@ inline TableTuple::TableTuple(char *data, const voltdb::TupleSchema *schema) {
     assert(schema);
     m_data = data;
     m_schema = schema;
+    isTuple = true; // ###
 }
 
 inline TableTuple& TableTuple::operator=(const TableTuple &rhs) {

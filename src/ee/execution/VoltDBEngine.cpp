@@ -202,6 +202,7 @@ VoltDBEngine::initialize(int32_t clusterIndex,
     m_templateSingleLongTable[38] = 1; // row count
     m_templateSingleLongTable[42] = 8; // row size
 
+
     // required for catalog loading.
     m_executorContext = new ExecutorContext(siteId,
                                             m_partitionId,
@@ -307,10 +308,18 @@ int VoltDBEngine::executeQuery(int64_t planfragmentId,
 {
     assert(planfragmentId != 0);
 
+	//std::cout << "\n —————————————————————————————————————————————— \n";
+	std::cout << "\n\n";
+	params.debug(); // ###
+	td::cout << "\n\n";
+	//std::cout << "\n —————————————————————————————————————————————— \n";
+
     Table *cleanUpTable = NULL;
     m_currentOutputDepId = outputDependencyId;
     m_currentInputDepId = inputDependencyId;
 
+	//std::cout << std::endl << "WYKONUJ SIE… " << std::endl; #####
+	
     /*
      * Reserve space in the result output buffer for the number of
      * result dependencies and for the dirty byte. Necessary for a
@@ -368,6 +377,27 @@ int VoltDBEngine::executeQuery(int64_t planfragmentId,
     for (int ctr = 0; ctr < ttl; ++ctr) {
         AbstractExecutor *executor = execsForFrag->list[ctr];
         assert (executor);
+
+
+		// ###
+		std::vector<Table*>& dTmp = executor->getPlanNode()->getInputTables();
+        for(int i = 0; i < dTmp.size(); i++){
+
+        	   Table * realtbl = this->getTable( dTmp[i]->name() );
+			   if( realtbl == NULL ) {
+			   		std::cout << "Real Tabela - NULL \n" << std::endl;
+			   		continue; 
+			   }
+			   TableTuple tempTuple = TableTuple(realtbl->schema());
+			   TableIterator iterator = dupa->iterator();
+        	   while (iterator.next(tempTuple)) {
+               			std::cout << "> Odczytane CSI dla wiersza : " << tempTuple.getCSI() << ". Inkrementujemy!\n";
+               			tempTuple.incrementCSI();
+               }
+        }
+      	// ###  
+        
+        
 
         if (executor->needsPostExecuteClear())
             cleanUpTable =

@@ -53,7 +53,7 @@
 
 namespace voltdb {
 
-std::string TableTuple::debug(const std::string& tableName) const {
+std::string TableTuple::debug(const std::string& tableName) { // ) const
     assert(m_schema);
     assert(m_data);
 
@@ -63,7 +63,14 @@ std::string TableTuple::debug(const std::string& tableName) const {
     } else {
         buffer << "TableTuple(" << tableName << ") ->";
     }
-
+    
+    
+	//if( isTuple ) {
+    //      setCSI(1);
+    // }
+    
+  	
+ 	      
     if (isActive() == false) {
         buffer << " <DELETED>";
     } else {
@@ -137,5 +144,26 @@ bool TableTuple::compatibleForCopy(const TableTuple &source) {
     }
     return true;
 }
+
+void TableTuple::setCSI(int newCSI) {
+	if( isTuple ) {
+		m_CSI = newCSI;
+		m_data[1] = m_CSI;
+		//std::cout << "Ustawiono nowa wartosc CSI:" << m_CSI << std::endl;
+	} else {
+		std::cout << "To nie tuple, a wolaja setCSI" << std::endl;
+	}
+ 
+}
+int TableTuple::getCSI() {
+	return (int) m_data[1];
+}	
+
+void TableTuple::incrementCSI() {
+	int current = (int) m_data[1];
+	setCSI( current + 1 );
+}
+
+
 
 }
