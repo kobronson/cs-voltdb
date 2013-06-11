@@ -101,6 +101,7 @@
 #include <sstream>
 #include <unistd.h>
 #include <locale>
+#include <string>
 #ifdef LINUX
 #include <malloc.h>
 #endif // LINUX
@@ -201,7 +202,6 @@ VoltDBEngine::initialize(int32_t clusterIndex,
     m_templateSingleLongTable[34] = 's';
     m_templateSingleLongTable[38] = 1; // row count
     m_templateSingleLongTable[42] = 8; // row size
-
 
     // required for catalog loading.
     m_executorContext = new ExecutorContext(siteId,
@@ -306,20 +306,13 @@ int VoltDBEngine::executeQuery(int64_t planfragmentId,
                                int64_t uniqueId,
                                bool first, bool last)
 {
+    std::cout << "------------------------------- executeQuery - początek" << std::endl;
     assert(planfragmentId != 0);
-
-	//std::cout << "\n —————————————————————————————————————————————— \n";
-	std::cout << "\n\n";
-	params.debug(); // ###
-	td::cout << "\n\n";
-	//std::cout << "\n —————————————————————————————————————————————— \n";
 
     Table *cleanUpTable = NULL;
     m_currentOutputDepId = outputDependencyId;
     m_currentInputDepId = inputDependencyId;
 
-	//std::cout << std::endl << "WYKONUJ SIE… " << std::endl; #####
-	
     /*
      * Reserve space in the result output buffer for the number of
      * result dependencies and for the dirty byte. Necessary for a
@@ -378,27 +371,62 @@ int VoltDBEngine::executeQuery(int64_t planfragmentId,
         AbstractExecutor *executor = execsForFrag->list[ctr];
         assert (executor);
 
-
-		// ###
-		std::vector<Table*>& dTmp = executor->getPlanNode()->getInputTables();
+/*
+        std::vector<Table*>& dTmp = executor->getPlanNode()->getInputTables();
         for(int i = 0; i < dTmp.size(); i++){
-
-        	   Table * realtbl = this->getTable( dTmp[i]->name() );
-			   if( realtbl == NULL ) {
-			   		std::cout << "Real Tabela - NULL \n" << std::endl;
-			   		continue; 
-			   }
-			   TableTuple tempTuple = TableTuple(realtbl->schema());
-			   TableIterator iterator = realtbl->iterator();
-        	   while (iterator.next(tempTuple)) {
-               			std::cout << "> Odczytane CSI dla wiersza : " << tempTuple.getCSI() << ". Inkrementujemy!\n";
-               			tempTuple.incrementCSI();
-               }
+        	if(this->getTable(dTmp[i]->name()) != NULL){
+	        	std::cout << "Tabela INPUTOWA: " << (this->getTable(dTmp[i]->name()))->debug() <<std::endl;
+	        	Table* tmp2 = this->getTable(dTmp[i]->name());
+	        	TableTuple tempTuple = TableTuple(tmp2->schema());
+	        	//tableutil::getRandomTuple( dynamic_cast<PersistentTable*> (tmp2), tempTuple);
+	        	NValue nv = ValueFactory::getSmallIntValue(9);
+        		tempTuple.setNValueAllocateForObjectCopies(0, nv, NULL);
+				nv.free();
+	        	tmp2->insertTuple(tempTuple);	
+	        }
+	        else std::cout << "Tabela INPUTOWA nie istnieje (?): " << dTmp[i]->name() << std::endl;
+        	//std::cout << dTmp[i]->debug() <<std::endl;
+        	//TableTuple tempTuple = TableTuple(dTmp[i]->schema());
+        	//TableIterator iterator = dTmp[i]->iterator();
+        	//while (iterator.next(tempTuple)) {
+        	//}
+        }*/
+        /*
+        Table* tmpOut = executor->getPlanNode()->getOutputTable();
+        Table* tmp2 = this->getTable(tmpOut->name());
+        if(tmp2 != NULL){
+	        	std::cout << "Tabela OUTPUTOWA: " << tmp2->debug() <<std::endl;
+	        	TableTuple tempTuple = TableTuple(tmp2->schema());
+	        	//tableutil::getRandomTuple( dynamic_cast<PersistentTable*> (tmp2), tempTuple);
+	        	NValue nv = ValueFactory::getSmallIntValue(3);
+        		tempTuple.setNValueAllocateForObjectCopies(0, nv, NULL);
+				nv.free();
+	        	tmp2->insertTuple(tempTuple);
+	        	
+	        }
+	    else std::cout << "Tabela OUTPUTOWA nie istnieje (?): " << tmpOut->name() << std::endl;
+	    */
+        	/*
+        	TempTable * tempt = dynamic_cast<TempTable*> (executor->getPlanNode()->getOutputTable());
+        	std::ifstream infile("test.csv");        	
+        	for( std::string line; getline( infile, line ); ){
+        		char tmpdata[1024];
+        		TableTuple tt = TableTuple(tmpdata,dTmp[i]->schema());
+        		NValue nv = ValueFactory::getStringValue("9");
+        		tt.setNValueAllocateForObjectCopies(0, nv, NULL);
+				nv.free();
+        		tempt->insertTempTuple(tt);
+        	}
+        	infile.close();
+        	TableTuple tempTuple = TableTuple(dTmp[i]->schema());
+        	TableIterator iterator = tempt->iterator();
+        	while (iterator.next(tempTuple)) {
+        		dTmp[i]->insertTuple(tempTuple);
+        	}
+        	std::cout << dTmp[i]->debug() <<std::endl;
         }
-      	// ###  
-        
-        
-
+        std::cout << "------------------------------- " << std::endl;
+*/
         if (executor->needsPostExecuteClear())
             cleanUpTable =
                 dynamic_cast<Table*>(executor->getPlanNode()->getOutputTable());
