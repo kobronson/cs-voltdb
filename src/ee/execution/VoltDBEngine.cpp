@@ -389,7 +389,7 @@ int VoltDBEngine::executeQuery(int64_t planfragmentId,
 			   		continue; 
 			   }
 			   TableTuple tempTuple = TableTuple(realtbl->schema());
-			   TableIterator iterator = dupa->iterator();
+			   TableIterator iterator = realtbl->iterator();
         	   while (iterator.next(tempTuple)) {
                			std::cout << "> Odczytane CSI dla wiersza : " << tempTuple.getCSI() << ". Inkrementujemy!\n";
                			tempTuple.incrementCSI();
