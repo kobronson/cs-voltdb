@@ -311,7 +311,7 @@ int VoltDBEngine::executeQuery(int64_t planfragmentId,
 	//std::cout << "\n —————————————————————————————————————————————— \n";
 	std::cout << "\n\n";
 	params.debug(); // ###
-	td::cout << "\n\n";
+	std::cout << "\n\n";
 	//std::cout << "\n —————————————————————————————————————————————— \n";
 
     Table *cleanUpTable = NULL;
