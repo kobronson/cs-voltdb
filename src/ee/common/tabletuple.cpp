@@ -148,7 +148,7 @@ bool TableTuple::compatibleForCopy(const TableTuple &source) {
 void TableTuple::setCSI(int newCSI) {
 	if( isTuple ) {
 		m_CSI = newCSI;
-		m_data[1] = m_CSI;
+		m_data[1] = static_cast<char>(m_CSI);
 		//std::cout << "Ustawiono nowa wartosc CSI:" << m_CSI << std::endl;
 	} else {
 		std::cout << "To nie tuple, a wolaja setCSI" << std::endl;

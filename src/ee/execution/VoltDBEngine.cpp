@@ -377,7 +377,7 @@ int VoltDBEngine::executeQuery(int64_t planfragmentId,
     for (int ctr = 0; ctr < ttl; ++ctr) {
         AbstractExecutor *executor = execsForFrag->list[ctr];
         assert (executor);
-
+        bool maxIsAchieved = false; //czy przekroczono maksymalną wartość indeksu
 
 		// ###
 		std::vector<Table*>& dTmp = executor->getPlanNode()->getInputTables();
@@ -393,7 +393,49 @@ int VoltDBEngine::executeQuery(int64_t planfragmentId,
         	   while (iterator.next(tempTuple)) {
                			std::cout << "> Odczytane CSI dla wiersza : " << tempTuple.getCSI() << ". Inkrementujemy!\n";
                			tempTuple.incrementCSI();
+                                if (tempTuple.getCSI() < 0) //jeśli indeks mniejszy od zera, to oznacza, że przekroczono maksimum
+                                {
+                                    maxIsAchieved = true;
+                                }
                }
+                           if (maxIsAchieved) //jeśli przekroczono maksymalną wartość indeksu, to pomniejsz wszystkie indeksy
+                           {
+                                map<int32_t, Table*>::const_iterator ti; 
+                                const map<int32_t, Table*>::const_iterator begin = m_tables.begin();
+                                const map<int32_t, Table*>::const_iterator end = m_tables.end();
+                                for (ti = begin; ti != end; ti++)
+                                {
+                                    Table *table = ti->second;
+                                    if( table == NULL )
+                                    {
+			   		continue; 
+                                    }
+                                    TableTuple tempTuple = TableTuple(table->schema());
+                                    TableIterator iterator = table->iterator();
+                                    while (iterator.next(tempTuple))
+                                    {
+                                        int cs =  tempTuple.getCSI();
+                                        if (cs > 37)
+                                        {
+                                            tempTuple.setCSI(cs - 38);
+                                        }
+                                        else
+                                        {
+                                            if (cs > 0)
+                                            {
+                                                tempTuple.setCSI(0);
+                                            }
+                                            else
+                                            {
+                                                if (cs < 0)
+                                                {
+                                                    tempTuple.setCSI(90);
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                           }
         }
       	// ###  
         
