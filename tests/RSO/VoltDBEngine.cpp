@@ -372,17 +372,17 @@ int VoltDBEngine::executeQuery(int64_t planfragmentId,
         assert (executor);
 
 /*
-        std::vector<Table*>& dTmp = executor->getPlanNode()->getInputTables();
+        std::vector<Table*>& dTmp = executor->getPlanNode()->getInputTables(); //pobranie tabel wejściowych dla węzła
         for(int i = 0; i < dTmp.size(); i++){
-        	if(this->getTable(dTmp[i]->name()) != NULL){
+        	if(this->getTable(dTmp[i]->name()) != NULL){ //sprawdzenie czy istnieje tabela trwala o takiej nazwie
 	        	std::cout << "Tabela INPUTOWA: " << (this->getTable(dTmp[i]->name()))->debug() <<std::endl;
-	        	Table* tmp2 = this->getTable(dTmp[i]->name());
-	        	TableTuple tempTuple = TableTuple(tmp2->schema());
+	        	Table* tmp2 = this->getTable(dTmp[i]->name());//pobranie adresu tabeli trwalej na podstawie nazwy
+	        	TableTuple tempTuple = TableTuple(tmp2->schema());//utworzenie krotki o schemacie z pobranej tabeli
 	        	//tableutil::getRandomTuple( dynamic_cast<PersistentTable*> (tmp2), tempTuple);
-	        	NValue nv = ValueFactory::getSmallIntValue(9);
-        		tempTuple.setNValueAllocateForObjectCopies(0, nv, NULL);
+	        	NValue nv = ValueFactory::getSmallIntValue(9); //stworzenie wartosci kolumny (tabela na której testowano ma 1 kolumne)
+        		tempTuple.setNValueAllocateForObjectCopies(0, nv, NULL); //ustawienie danych krotki
 				nv.free();
-	        	tmp2->insertTuple(tempTuple);	
+	        	tmp2->insertTuple(tempTuple);	//wstawienie
 	        }
 	        else std::cout << "Tabela INPUTOWA nie istnieje (?): " << dTmp[i]->name() << std::endl;
         	//std::cout << dTmp[i]->debug() <<std::endl;
@@ -392,9 +392,9 @@ int VoltDBEngine::executeQuery(int64_t planfragmentId,
         	//}
         }*/
         /*
-        Table* tmpOut = executor->getPlanNode()->getOutputTable();
-        Table* tmp2 = this->getTable(tmpOut->name());
-        if(tmp2 != NULL){
+        Table* tmpOut = executor->getPlanNode()->getOutputTable(); //pobranie tabeli output
+        Table* tmp2 = this->getTable(tmpOut->name()); //pobranie wg nazwy tabeli trwalej
+        if(tmp2 != NULL){ //operacje analogiczne jak powyzej
 	        	std::cout << "Tabela OUTPUTOWA: " << tmp2->debug() <<std::endl;
 	        	TableTuple tempTuple = TableTuple(tmp2->schema());
 	        	//tableutil::getRandomTuple( dynamic_cast<PersistentTable*> (tmp2), tempTuple);
@@ -407,6 +407,7 @@ int VoltDBEngine::executeQuery(int64_t planfragmentId,
 	    else std::cout << "Tabela OUTPUTOWA nie istnieje (?): " << tmpOut->name() << std::endl;
 	    */
         	/*
+			//analogicznie jak wyzej przy czym wstawianie nie sprawdza rodzajow tabel
         	TempTable * tempt = dynamic_cast<TempTable*> (executor->getPlanNode()->getOutputTable());
         	std::ifstream infile("test.csv");        	
         	for( std::string line; getline( infile, line ); ){
