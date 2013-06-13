@@ -374,6 +374,26 @@ public class RealVoltDB implements VoltDBInterface, RestoreAgent.Callback
             final Future<?> buildStringValidation = validateBuildString(getBuildString(), m_messenger.getZK());
 
             final int numberOfNodes = readDeploymentAndCreateStarterCatalogContext();
+            
+            org.voltdb.compiler.deploymentfile.ColdStorageType coldStorageInfo = m_deployment.getColdStorage(); //pobierz konfiguracje CS
+            if (coldStorageInfo != null && coldStorageInfo.getEnabled() > 0) //jęśli Cold Storage jest włączony, ustaw inne wartości
+            {
+                percentageOfDataToMove = coldStorageInfo.getDatapercentage();
+                limitMemoryUsagePercentage = coldStorageInfo.getMemoryusagepercentage();
+                consoleLog.info("Cold storage is enabled. " + percentageOfDataToMove + 
+                                "% of the least recently used data will be moved on disk when the memory usage reaches " + 
+                                limitMemoryUsagePercentage + "%.");
+                coldStorageIsEnabled = true;
+                Memory.setPercentageOfDataToMove(percentageOfDataToMove);
+                Memory.setLimitUsagePercentage(limitMemoryUsagePercentage);
+            }
+            else // w przciwnym wypadku, wyświetl, że Cold Storage jest wyłączony
+            {
+                consoleLog.info("Cold storage is disabled.");
+                coldStorageIsEnabled = false;
+            } 
+            Memory.setColdStorageEnabled(coldStorageIsEnabled);
+            
             if (!isRejoin && !m_joining) {
                 m_messenger.waitForGroupJoin(numberOfNodes);
             }
@@ -715,22 +735,6 @@ public class RealVoltDB implements VoltDBInterface, RestoreAgent.Callback
             // print out a bunch of useful system info
             logDebuggingInfo(m_config.m_adminPort, m_config.m_httpPort, m_httpPortExtraLogMessage, m_jsonEnabled);
             
-            org.voltdb.compiler.deploymentfile.ColdStorageType coldStorageInfo = m_deployment.getColdStorage();
-            if (coldStorageInfo != null && coldStorageInfo.getEnabled() > 0)
-            {
-                percentageOfDataToMove = coldStorageInfo.getDatapercentage();
-                limitMemoryUsagePercentage = coldStorageInfo.getMemoryusagepercentage();
-                consoleLog.info("Cold storage is enabled. " + percentageOfDataToMove + "% of the least recently used data will be moved on disk when the memory usage reaches " + limitMemoryUsagePercentage + "%.");
-                coldStorageIsEnabled = true;
-                Memory.setPercentageOfDataToMove(percentageOfDataToMove);
-                Memory.setLimitUsagePercentage(limitMemoryUsagePercentage);
-            }
-            else
-            {
-                consoleLog.info("Cold storage is disabled.");
-                coldStorageIsEnabled = false;
-            } 
-            Memory.setColdStorageEnabled(coldStorageIsEnabled);
             if (clusterConfig.getReplicationFactor() == 0) {
                 hostLog.warn("Running without redundancy (k=0) is not recommended for production use.");
             }

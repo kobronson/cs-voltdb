@@ -110,7 +110,8 @@ namespace voltdb {
 
 const int64_t AD_HOC_FRAG_ID = -1;
 
-VoltDBEngine::VoltDBEngine(Topend *topend, LogProxy *logProxy)
+VoltDBEngine::VoltDBEngine(Topend *topend, LogProxy *logProxy, bool coldStorageIsEnabled, float limitMemoryUsage, 
+                           float percentageOfDataToMove)
     : m_currentUndoQuantum(NULL),
       m_hashinator(NULL),
       m_staticParams(MAX_PARAM_COUNT),
@@ -121,11 +122,21 @@ VoltDBEngine::VoltDBEngine(Topend *topend, LogProxy *logProxy)
       m_numResultDependencies(0),
       m_logManager(logProxy),
       m_templateSingleLongTable(NULL),
-      m_topend(topend)
+      m_topend(topend),
+      m_isCSEnabled(coldStorageIsEnabled), //przekazana informacja, czy Cold Storage jest włączony
+      m_limitMemoryUsage(limitMemoryUsage), //przekazana liczba procent użycia pamięci, przy którym wyjonywany jest zrzut na dysk
+      m_percentageOfDataToMove(percentageOfDataToMove) //przekazywana liczba procent danych do zrzutu na dysk
 {
     // init the number of planfragments executed
     m_pfCount = 0;
-
+    
+    if (coldStorageIsEnabled) //jeśli Cold Storage jest włączony, dokonaj obliczeń
+    {
+        m_partOfDataToMove = percentageOfDataToMove * 0.01f; //cześć danych do zrzutu (wyrażona w ułamku dziesiętnym)
+        m_numCSCut = static_cast<int>(round(m_partOfDataToMove * 127)); //wartość, o którą będą obniżane indesy
+        m_maxCutCS = 127 - m_numCSCut; //maksymalna wartość indesu po ucięciu wszystkich indesów
+    }
+    
     // require a site id, at least, to inititalize.
     m_executorContext = NULL;
 
@@ -307,13 +318,16 @@ int VoltDBEngine::executeQuery(int64_t planfragmentId,
                                bool first, bool last)
 {
     assert(planfragmentId != 0);
-
+    
+    if (m_isCSEnabled) //jeśli Cold Storage jest włączony, wypisuj znaki nowego wiersza
+    {
 	//std::cout << "\n —————————————————————————————————————————————— \n";
 	std::cout << "\n\n";
 	params.debug(); // ###
 	std::cout << "\n\n";
 	//std::cout << "\n —————————————————————————————————————————————— \n";
-
+    }
+    
     Table *cleanUpTable = NULL;
     m_currentOutputDepId = outputDependencyId;
     m_currentInputDepId = inputDependencyId;
@@ -378,70 +392,72 @@ int VoltDBEngine::executeQuery(int64_t planfragmentId,
     {
         AbstractExecutor *executor = execsForFrag->list[ctr];
         assert (executor);
-        bool maxIsAchieved = false; //czy przekroczono maksymalną wartość indeksu
-
-		// ###
-        std::vector<Table*>& dTmp = executor->getPlanNode()->getInputTables();
-        for(int i = 0; i < dTmp.size(); i++)
+        if (m_isCSEnabled) //jeśli Cold Sorage jest włączony, inkrementuj indesy
         {
+            bool maxIsAchieved = false; //czy przekroczono maksymalną wartość indeksu
 
-        	   Table * realtbl = this->getTable( dTmp[i]->name() );
-			   if( realtbl == NULL ) {
-			   		std::cout << "Real Tabela - NULL \n" << std::endl;
-			   		continue; 
-			   }
-			   TableTuple tempTuple = TableTuple(realtbl->schema());
-			   TableIterator iterator = realtbl->iterator();
-        	   while (iterator.next(tempTuple)) {
-               			std::cout << "> Odczytane CSI dla wiersza : " << tempTuple.getCSI() << ". Inkrementujemy!\n";
-               			tempTuple.incrementCSI();
-                                if (tempTuple.getCSI() < 0) //jeśli indeks mniejszy od zera, to oznacza, że przekroczono maksimum
-                                {
-                                    maxIsAchieved = true;
-                                }
-               }
-                           
-        }
-        if (maxIsAchieved) //jeśli przekroczono maksymalną wartość indeksu, to pomniejsz wszystkie indeksy
-        {
-            map<int32_t, Table*>::const_iterator ti; 
-            const map<int32_t, Table*>::const_iterator begin = m_tables.begin();
-            const map<int32_t, Table*>::const_iterator end = m_tables.end();
-            for (ti = begin; ti != end; ti++)
+                    // ###
+            std::vector<Table*>& dTmp = executor->getPlanNode()->getInputTables();
+            for(int i = 0; i < dTmp.size(); i++)
             {
-                Table *table = ti->second;
-                if( table == NULL )
+
+                       Table * realtbl = this->getTable( dTmp[i]->name() );
+                               if( realtbl == NULL ) {
+                                            std::cout << "Real Tabele - NULL \n" << std::endl;
+                                            continue; 
+                               }
+                               TableTuple tempTuple = TableTuple(realtbl->schema());
+                               TableIterator iterator = realtbl->iterator();
+                       while (iterator.next(tempTuple)) {
+                                    std::cout << "> Odczytane CSI dla wiersza : " << tempTuple.getCSI() << ". Inkrementujemy!\n";
+                                    tempTuple.incrementCSI();
+                                    if (tempTuple.getCSI() < 0) //jeśli indeks mniejszy od zera, to oznacza, że przekroczono maksimum
+                                    {
+                                        maxIsAchieved = true;
+                                    }
+                   }
+
+            }
+            if (maxIsAchieved) //jeśli przekroczono maksymalną wartość indeksu, to pomniejsz wszystkie indeksy
+            {
+                map<int32_t, Table*>::const_iterator ti; 
+                const map<int32_t, Table*>::const_iterator begin = m_tables.begin();
+                const map<int32_t, Table*>::const_iterator end = m_tables.end();
+                for (ti = begin; ti != end; ti++)
                 {
-                    continue; 
-                }
-                TableTuple tempTuple = TableTuple(table->schema());
-                TableIterator iterator = table->iterator();
-                while (iterator.next(tempTuple))
-                {
-                    int cs =  tempTuple.getCSI();
-                    if (cs > 37)
+                    Table *table = ti->second;
+                    if( table == NULL )
                     {
-                        tempTuple.setCSI(cs - 38);
+                        continue; 
                     }
-                    else
+                    TableTuple tempTuple = TableTuple(table->schema());
+                    TableIterator iterator = table->iterator();
+                    while (iterator.next(tempTuple))
                     {
-                        if (cs > 0)
+                        int cs =  tempTuple.getCSI();
+                        if (cs >= m_numCSCut)
                         {
-                            tempTuple.setCSI(0);
+                            tempTuple.setCSI(cs - m_numCSCut);
                         }
                         else
                         {
-                            if (cs < 0)
+                            if (cs > 0)
                             {
-                                tempTuple.setCSI(90);
+                                tempTuple.setCSI(0);
+                            }
+                            else
+                            {
+                                if (cs < 0)
+                                {
+                                    tempTuple.setCSI(m_maxCutCS);
+                                }
                             }
                         }
                     }
                 }
             }
+            // ###  
         }
-      	// ###  
-        
         
 
         if (executor->needsPostExecuteClear())

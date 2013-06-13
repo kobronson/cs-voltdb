@@ -137,8 +137,8 @@ class __attribute__((visibility("default"))) VoltDBEngine {
           m_logManager(new StdoutLogProxy()), m_templateSingleLongTable(NULL), m_topend(NULL)
         {
         }
-
-        VoltDBEngine(Topend *topend, LogProxy *logProxy);
+        //poniżej deklaracja konstruktora z dodatkowymi wartościami z konfiguracji Cold Storage
+        VoltDBEngine(Topend *topend, LogProxy *logProxy, bool coldStorageIsEnabled, float limitMemoryUsage, float percentageOfDataToMove);
         bool initialize(int32_t clusterIndex,
                         int64_t siteId,
                         int32_t partitionId,
@@ -563,6 +563,13 @@ class __attribute__((visibility("default"))) VoltDBEngine {
         ExecutorContext *m_executorContext;
 
         DefaultTupleSerializer m_tupleSerializer;
+        
+        bool m_isCSEnabled; //Cold Storage: czy jest włączony
+        float m_limitMemoryUsage; //Cold Storage: liczba procent użycia pamięci po osiągniećiu, której wykonywany jest zrzut
+        double m_percentageOfDataToMove; //Cold Storage: liczba procent danych do zrzutu
+        float m_partOfDataToMove; //Cold Storage: część danych do zrzutu
+        int m_numCSCut; //Cold Storage: wartość, o którą obniżany jest indeks
+        int m_maxCutCS; //Cold Storage: maksymalna wartość indeksu po obcięciu
 
     private:
         ThreadLocalPool m_tlPool;

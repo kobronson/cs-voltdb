@@ -186,7 +186,10 @@ void setupSigHandler(void) {
  * This does strictly nothing so that this method never throws an exception.
  * @return the created VoltDBEngine pointer casted to jlong.
 */
-SHAREDLIB_JNIEXPORT jlong JNICALL Java_org_voltdb_jni_ExecutionEngine_nativeCreate(JNIEnv *env, jobject obj, jboolean isSunJVM) {
+SHAREDLIB_JNIEXPORT jlong JNICALL Java_org_voltdb_jni_ExecutionEngine_nativeCreate(JNIEnv *env, jobject obj, jboolean isSunJVM,
+                                                                                   jboolean CSIsEnabled, jfloat lu, 
+                                                                                   jfloat percentageOfDataToMove)
+{
     // obj is the instance pointer of the ExecutionEngineJNI instance
     // that is creating this native EE. Turn this into a global reference
     // and only use that global reference for calling back to Java.
@@ -197,7 +200,7 @@ SHAREDLIB_JNIEXPORT jlong JNICALL Java_org_voltdb_jni_ExecutionEngine_nativeCrea
     // second java->ee call may generate a new local reference that would
     // be invalid in the previous stack frames (after the return of the
     // last ee native call.)
-
+    //przekazywanie konfiguracji Cold Storage: CSIsEnabled, lu (użycie pamięci, przy której wykonywany jest zrzut), percentageOfDataToMove
     jobject java_ee = env->NewGlobalRef(obj);
     if (java_ee == NULL) {
         assert(!"Failed to allocate global reference to java EE.");
@@ -213,7 +216,8 @@ SHAREDLIB_JNIEXPORT jlong JNICALL Java_org_voltdb_jni_ExecutionEngine_nativeCrea
     VoltDBEngine *engine = NULL;
     try {
         topend = new JNITopend(env, java_ee);
-        engine = new VoltDBEngine( topend, JNILogProxy::getJNILogProxy(env, vm));
+        engine = new VoltDBEngine(topend, JNILogProxy::getJNILogProxy(env, vm), CSIsEnabled != JNI_FALSE, 
+                                  static_cast<float>(lu), static_cast<float>(percentageOfDataToMove));
     } catch (const FatalException &e) {
         if (topend != NULL) {
             topend->crashVoltDB(e);

@@ -30,6 +30,7 @@ import org.voltcore.logging.VoltLogger;
 import org.voltcore.utils.DBBPool.BBContainer;
 import org.voltdb.ExecutionSite;
 import org.voltdb.FragmentPlanSource;
+import org.voltdb.Memory;
 import org.voltdb.PlannerStatsCollector;
 import org.voltdb.PlannerStatsCollector.CacheUse;
 import org.voltdb.StatsAgent;
@@ -480,7 +481,8 @@ public abstract class ExecutionEngine implements FastDeserializer.Deserializatio
      * This does strictly nothing so that this method never throws an exception.
      * @return the created VoltDBEngine pointer casted to jlong.
      */
-    protected native long nativeCreate(boolean isSunJVM);
+    protected native long nativeCreate(boolean isSunJVM, boolean coldStorageIsEnabled, float limitUsagePercentage,
+                                       float percentageOfDataToMove);
     /**
      * Releases all resources held in the execution engine.
      * @param pointer the VoltDBEngine pointer to be destroyed

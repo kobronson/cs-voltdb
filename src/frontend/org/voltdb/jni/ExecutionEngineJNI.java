@@ -36,6 +36,7 @@ import org.voltdb.export.ExportProtoMessage;
 import org.voltdb.messaging.FastDeserializer;
 import org.voltdb.messaging.FastSerializer;
 import org.voltdb.messaging.FastSerializer.BufferGrowCallback;
+import org.voltdb.Memory;
 
 /**
  * Wrapper for native Execution Engine library.
@@ -109,7 +110,8 @@ public class ExecutionEngineJNI extends ExecutionEngine {
          * the signal handler or not.
          */
         pointer = nativeCreate(System.getProperty("java.vm.vendor")
-                               .toLowerCase().contains("sun microsystems"));
+                               .toLowerCase().contains("sun microsystems"), Memory.coldStorageIsEnabled(), Memory.getLimitUsagePercentage(),
+                               Memory.getPercentageOfDataToMove()); //z dodatkowym wartościami z konfiguracji Cold Storage
         nativeSetLogLevels(pointer, EELoggers.getLogLevels());
         int errorCode =
             nativeInitialize(

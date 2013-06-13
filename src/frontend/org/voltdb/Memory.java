@@ -41,6 +41,15 @@ public abstract class Memory
         limitUsagePercentage = limit;
     }
     /**
+     * Gets the limit percentage of used RAM
+     *
+     * @return the number of percentages
+     */
+    public static float getLimitUsagePercentage()
+    {
+        return limitUsagePercentage;
+    }
+    /**
      * Gets the percentage of data to move on disk when the memory used is equal to or greater than the limit
      *
      * @return the number of percentages of data
